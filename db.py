@@ -17,15 +17,32 @@ if USE_PG:
     import psycopg2
     import psycopg2.extras
     import psycopg2.pool
-    _pool = psycopg2.pool.ThreadedConnectionPool(1, 5, DATABASE_URL)
 else:
     _sqlite_lock = threading.Lock()
+
+_pool = None
+_pool_pid = None
+_pool_lock = threading.Lock()
+
+
+def _get_pool():
+    """One connection pool per process, created on first use. gunicorn
+    --preload imports the app (and runs init_db) before forking workers; a
+    pool made then would hand the same connection to every worker."""
+    global _pool, _pool_pid
+    with _pool_lock:
+        if _pool is None or _pool_pid != os.getpid():
+            # 4 threads per worker in the Procfile; keep a spare connection.
+            _pool = psycopg2.pool.ThreadedConnectionPool(1, 6, DATABASE_URL)
+            _pool_pid = os.getpid()
+        return _pool
 
 
 def query(sql, params=(), one=False):
     """Run one statement; returns a list of dicts (or one dict / None)."""
     if USE_PG:
-        conn = _pool.getconn()
+        pool = _get_pool()
+        conn = pool.getconn()
         broken = False
         try:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -38,7 +55,7 @@ def query(sql, params=(), one=False):
                 conn.rollback()
             raise
         finally:
-            _pool.putconn(conn, close=broken)
+            pool.putconn(conn, close=broken)
     else:
         with _sqlite_lock:
             conn = sqlite3.connect(SQLITE_PATH)

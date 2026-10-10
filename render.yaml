@@ -1,0 +1,23 @@
+# Render Blueprint: New → Blueprint → pick this repo. Render creates the web
+# service and asks for the values marked sync: false (from your Supabase
+# project — see README). FLASK_SECRET_KEY is generated for you.
+services:
+  - type: web
+    name: thai-mixer
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --preload --workers 2 --threads 4 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false

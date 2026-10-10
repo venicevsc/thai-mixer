@@ -50,7 +50,8 @@ Most hosts wipe the server's disk on redeploy, so for the real event, store data
    - `ADMIN_PASSWORD`: admin stays off until this is set
    - `FLASK_SECRET_KEY`: any long random string (`python -c "import secrets; print(secrets.token_hex(32))"`)
 3. Deploy to any Python host. On first start the app creates its tables (with row-level security on) and a public `mixer-media` storage bucket by itself.
-   - **Render**: New Web Service from this repo. Build `pip install -r requirements.txt`, start `gunicorn app:app --preload --workers 2 --threads 4 --timeout 120`.
+   - **Render (easiest)**: Render dashboard → **New → Blueprint** → pick this repo. `render.yaml` sets everything up, and Render asks you for the Supabase values and `ADMIN_PASSWORD`.
+   - **Vercel and other "serverless" hosts don't work as is**: they can't save files and cap uploads at about 4.5 MB.
    - **Railway / Heroku-style hosts**: the `Procfile` is already set up.
 4. Open `/qr` on the live site and print it, open `/screen` on the projector laptop, and log into `/admin` on an organizer's phone.
 
