@@ -26,6 +26,8 @@ Log into `/admin` and open **Edit activities**. From there you can rewrite any b
 
 Tap a player's name on the admin leaderboard to see everything they've submitted, including bingo names, which never go through the approval queue. **Remove points** takes off the points for anything that doesn't count, and the player can redo it. You can also delete a player entirely, for example someone who joined with a joke name. Each row of the leaderboard has a **Delete** button for this.
 
+To save every photo and video, click **⬇️ Download photos** in the admin menu. You get one zip with readable names like `012 Ploy - Team up with a พี่ for a wai selfie.jpg` (rejected ones are left out). Locally they also sit in the `uploads/` folder, with random names.
+
 Photos and videos on the projector can be given a caption, **hidden** (off the screen, but the person keeps their points) or **deleted** (the points come off too).
 
 After a practice run, use **Reset** at the bottom of `/admin`, where you type RESET to confirm. You can clear all scores and photos but keep the players, or delete everyone. Edited activities are kept either way.

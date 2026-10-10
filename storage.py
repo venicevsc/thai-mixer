@@ -51,6 +51,14 @@ def save(key, data, content_type):
             f.write(data)
 
 
+def read(key):
+    """The file's bytes (used for the admin's download-all zip)."""
+    if USE_SUPABASE:
+        return _request("GET", f"object/{BUCKET}/{key}")
+    with open(os.path.join(LOCAL_DIR, key), "rb") as f:
+        return f.read()
+
+
 def delete(key):
     try:
         if USE_SUPABASE:

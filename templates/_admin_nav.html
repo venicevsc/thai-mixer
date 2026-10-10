@@ -3,6 +3,7 @@
   <a href="{{ url_for('admin_content') }}" {% if request.endpoint == 'admin_content' %}aria-current="page"{% endif %}>✏️ Edit activities</a>
   <a href="{{ url_for('screen') }}" target="_blank">📺 Projector ↗</a>
   <a href="{{ url_for('qr') }}" target="_blank">🔳 QR code ↗</a>
+  <a href="{{ url_for('admin_photos_zip') }}">⬇️ Download photos</a>
   <form method="post" action="{{ url_for('admin_logout') }}">
     <button class="btn ghost small" type="submit">Sign out</button>
   </form>

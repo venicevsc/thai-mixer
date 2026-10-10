@@ -12,16 +12,20 @@ Pages:
 """
 
 import json
+import re
 import os
 import secrets
+import tempfile
+import urllib.error
 import uuid
+import zipfile
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 load_dotenv()
 
 from flask import (Flask, abort, g, jsonify, redirect, render_template, request,
-                   send_from_directory, session, url_for)
+                   send_file, send_from_directory, session, url_for)
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import game
@@ -406,6 +410,35 @@ def admin_player_delete(player_id):
     db.query("DELETE FROM mixer_submissions WHERE player_id = ?", (player_id,))
     db.query("DELETE FROM mixer_players WHERE id = ?", (player_id,))
     return redirect(url_for("admin"))
+
+
+@app.route("/admin/photos.zip")
+def admin_photos_zip():
+    """Every photo/video that wasn't rejected, in one zip with readable
+    names: '012 Ploy - Team up with a พี่ for a wai selfie.jpg'."""
+    if not is_admin():
+        return redirect(url_for("admin"))
+    subs = db.query("""
+        SELECT s.activity_id, s.media_key, p.name FROM mixer_submissions s
+        JOIN mixer_players p ON p.id = s.player_id
+        WHERE s.media_key IS NOT NULL AND s.status <> 'rejected'
+        ORDER BY s.created_at""")
+    acts = cfg().ACTIVITIES
+    # Spools to disk past 50 MB so a pile of videos doesn't fill memory.
+    buf = tempfile.SpooledTemporaryFile(max_size=50 * 1024 * 1024)
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:  # photos/videos are already compressed
+        for i, s in enumerate(subs, 1):
+            title = acts.get(s["activity_id"], {}).get("title", s["activity_id"])
+            stem = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", f"{s['name']} - {title}")[:120].strip(" .")
+            ext = s["media_key"].rsplit(".", 1)[-1]
+            try:
+                zf.writestr(f"{i:03d} {stem}.{ext}", storage.read(s["media_key"]))
+            except (OSError, urllib.error.URLError):
+                continue  # file already gone; skip it rather than fail the whole download
+    buf.seek(0)
+    stamp = datetime.now().strftime("%Y-%m-%d")
+    return send_file(buf, mimetype="application/zip", as_attachment=True,
+                     download_name=f"mixer-photos-{stamp}.zip")
 
 
 @app.post("/admin/reset")
